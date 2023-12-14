@@ -241,10 +241,14 @@ extension StripeSdk {
     }
     
     private func buildCustomerHandlersForPaymentSheet(applePayParams: NSDictionary) -> PaymentSheet.ApplePayConfiguration.Handlers? {
-        if (applePayParams["request"] == nil) {
-            return nil
-        }
         return PaymentSheet.ApplePayConfiguration.Handlers(paymentRequestHandler: { request in
+            // Workaround to request fields like email from customer
+            request.requiredShippingContactFields = request.requiredBillingContactFields
+            
+            guard let _ = applePayParams["request"] as? String else {
+                return request
+            }
+            
             do {
                 try request.configureRequestType(requestParams: applePayParams)
             } catch {
